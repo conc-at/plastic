@@ -44,7 +44,7 @@ program
   .alias('ps')
   .action(() => {
     const table = new Table({
-      head: ['Name', 'Count'],
+      head: ['ID', 'Name'],
       chars: {
         'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗',
         'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚', 'bottom-right': '╝',

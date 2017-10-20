@@ -10,6 +10,20 @@ npm install
 
 ## Templates
 
+You can create new templates by adding a `template.hbs` and `style.css` inside a new
+directory within `templates`. The `options.json` defines print format and several other
+options ([Read more](https://www.npmjs.com/package/html-pdf#options)).
+
+**Example:**
+
+```bash
+templates
+└── letter
+    ├── options.json
+    ├── style.css
+    ├── template.hbs
+    └── template.html
+```
 
 ### Available templates
 

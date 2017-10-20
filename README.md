@@ -2,6 +2,8 @@
 
 > The .concat() card printing software.
 
+![](./docs/images/card.png)
+
 ## Setup
 
 ```bash

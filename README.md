@@ -6,6 +6,10 @@
 
 ```bash
 npm install
-npm start
 ```
 
+## Run
+
+```bash
+./index.js
+```

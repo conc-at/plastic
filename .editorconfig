@@ -1,0 +1,26 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.js]
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+[*.css]
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+[*.{hbs,html}]
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+[package.json]
+indent_style = space
+indent_size = 2

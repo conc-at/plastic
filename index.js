@@ -3,130 +3,118 @@
 const Table = require('cli-table')
 const program = require('commander')
 const fs = require('fs')
-const Handlebars = require('handlebars')
-const pdf = require('html-pdf')
-const isNumber = require('lodash/isNumber')
 const path = require('path')
-const printer = require('printer')
-const {promisify} = require('util')
-const slug = require('slug')
+
+const {
+  document,
+  getPrinter,
+  getPrinters,
+  getTemplate,
+  print
+} = require('./lib')
 
 const pkg = require('./package.json')
 
-const readFile = promisify(fs.readFile)
-
-function getPrinterById(id) {
-  if (isNumber(parseInt(id))) {
-    const printers = printer.getPrinters()
-    return printers[parseInt(id)]
-  }
-
-  return printer.getPrinter(id)
+const defaults = {
+  templatePath: path.resolve(__dirname, 'templates'),
+  outputPath: path.resolve(__dirname, 'output')
 }
 
-async function getTemplate(name) {
-  const base = path.resolve(__dirname, 'templates', name)
-  const file = path.resolve(base, 'template.hbs')
-  const opts = require(path.resolve(base, 'options.json'))
-  const buffer = await readFile(file)
-  return {
-    template: Handlebars.compile(buffer.toString()),
-    options: {base: `file://${base}/`, ...opts}
+function stringify(data) {
+  if (typeof data === 'object' && data.constructor === Error) {
+    return JSON.stringify({
+      name: data.name,
+      message: data.message,
+      stack: data.stack
+    }, null, '  ')
+  }
+  return JSON.stringify(data, null, '  ')
+}
+
+function output(data, format = 'json') {
+  switch (format) {
+    case 'log':
+      return console.log(data)
+    case 'json':
+      return console.log(stringify(data))
+    default:
+      console.log(data)
   }
 }
 
 program
   .version(pkg.version)
+  .option('-f, --format [format]', 'Set output format', /^(json|log)$/i)
+  .option('-t, --template-path [path]', 'Set template path')
 
 program
-  .command('printer')
+  .command('printers')
   .description('Show available printer')
   .alias('ps')
   .action(() => {
     const table = new Table({
       head: ['ID', 'Name'],
       chars: {
-        'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗',
-        'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚', 'bottom-right': '╝',
-        'left': '║', 'left-mid': '╟', 'mid': '─', 'mid-mid': '┼',
-        'right': '║', 'right-mid': '╢', 'middle': '│'
+        'top': '═',
+        'top-mid': '╤',
+        'top-left': '╔',
+        'top-right': '╗',
+        'bottom': '═',
+        'bottom-mid': '╧',
+        'bottom-left': '╚',
+        'bottom-right': '╝',
+        'left': '║',
+        'left-mid': '╟',
+        'mid': '─',
+        'mid-mid': '┼',
+        'right': '║',
+        'right-mid': '╢',
+        'middle': '│'
       }
     })
 
-    const printers = printer.getPrinters()
-    printers.forEach((p, idx) => table.push([idx, p.name]))
+    const list = getPrinters()
 
-    console.log(table.toString())
-  })
-
-program
-  .command('print <printer> <template> <name>')
-  .description('Print name on card')
-  .alias('p')
-  .action(async (printerId, templateName, name) => {
-    const p = getPrinterById(printerId)
-
-    const {
-      template,
-      options
-    } = await getTemplate(templateName)
-
-    pdf
-      .create(template({name}), options)
-      .toBuffer((err, buffer) => {
-        const params = {
-          data: buffer,
-          docname: `${template}-${slug(name)}`,
-          printer: p.name,
-          type: 'RAW',
-          success: (jobId) => console.log(`Sent print job: ${jobId}`),
-          error: (err) => console.error(err)
-        }
-        printer.printDirect(params)
-      })
-  })
-
-program
-  .command('print-to-file <template> <name> [path]')
-  .description('Print name on card but output as PDF')
-  .alias('ptf')
-  .action(async (templateName, name, toPath) => {
-    const {
-      template,
-      options
-    } = await getTemplate(templateName)
-
-    const html = pdf
-      .create(template({name}), options)
-
-    const filePath = toPath
-      ? toPath
-      : path.resolve(__dirname, 'output', `${slug(name)}.pdf`)
-
-    html
-      .toFile(filePath, (err, res) => {
-        if (err) {
-          return console.error(err.message)
-        }
-        console.log(`Print to file successfull: ${res.filename}`)
-      })
-  })
-
-program
-  .command('print-file <printer> <file>')
-  .description('Print file')
-  .alias('pf')
-  .action((printerId, filename) => {
-    const p = getPrinterById(printerId)
-    const parameters = {
-      filename,
-      docname: `${slug(filename)}`,
-      printer: p.name,
-      success: (jobId) => console.log(`Sent print job: ${jobId}`),
-      error: (err) => console.error(err)
+    if (program.format === 'log') {
+      list.forEach((p, idx) => table.push([idx, p.name]))
+      return output(list, 'log')
     }
 
-    printer.printFile(parameters)
+    output(list, program.format)
+  })
+
+program
+  .command('print <template> <data>')
+  .description('Print name on card')
+  .alias('p')
+  .option('-p, --printer <id>', 'Select printer, write to stdout by default')
+  .option('-o, --output <path>', 'Write to file')
+  .action(async (templateName, data, opts) => {
+    try {
+      const {
+        template,
+        options
+      } = await getTemplate(defaults.templatePath, templateName)
+      const json = JSON.parse(data)
+      const base = `file://${defaults.templatePath}/${templateName}/`
+      const stream = await document(template, json, {base, ...options})
+
+      // print
+      if (opts.printer) {
+        return await print(stream, opts.printer)
+      }
+
+      // write file
+      if (opts.output) {
+        const o = fs.createWriteStream(opts.output)
+        stream.pipe(o)
+        return
+      }
+
+      stream.pipe(process.stdout)
+    } catch (err) {
+      output(err, program.format)
+    }
   })
 
 program

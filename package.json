@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "The .concat() card printing software.",
   "main": "index.js",
+  "bin": {
+    "plastic": "./index.js"
+  },
   "scripts": {
     "lint": "eslint -c .eslintrc.yml index.js",
     "lint:fix": "eslint -c .eslintrc.yml --fix index.js",
@@ -20,8 +23,7 @@
     "handlebars": "^4.0.11",
     "html-pdf": "^2.2.0",
     "lodash": "^4.17.4",
-    "printer": "^0.2.2",
-    "slug": "^0.9.1"
+    "printer": "^0.2.2"
   },
   "devDependencies": {
     "eslint": "^4.9.0"

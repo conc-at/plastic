@@ -1,0 +1,19 @@
+{
+  "name": "plastic",
+  "version": "1.0.0",
+  "description": "The .concat() card printing software.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "print",
+    "conference"
+  ],
+  "author": "Hannes Moser <hannes@impossiblearts.com>",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^2.11.0",
+    "printer": "^0.2.2"
+  }
+}

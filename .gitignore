@@ -1,0 +1,8 @@
+# System
+*.DS_Store
+
+# IDE
+.idea/
+
+# Node.js
+node_modules/

@@ -26,6 +26,6 @@
     "printer": "^0.2.2"
   },
   "devDependencies": {
-    "eslint": "^4.9.0"
+    "eslint": "^4.10.0"
   }
 }

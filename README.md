@@ -57,13 +57,14 @@ List available printers. Use either `name` or `ID` for print jobs.
 ╚════╧═══════════════════════════╝
 ```
 
-### print &lt;printer&gt; &lt;template&gt; &lt;name&gt;
+### printers|ps &lt;printer&gt; &lt;template&gt; &lt;name&gt;
 
-Print name. You can select printer and template.
+List of available printers
 
 **Arguments:**
 
-* **printer** Printer ID
+* **--printer|p** Printer ID
+* **--output|o** File path
 * **template** Template name
 * **name** Name to print
 
@@ -73,32 +74,19 @@ Print name. You can select printer and template.
 ./index.js print 2 "credit-card" "The name"
 ```
 
-### print-to-file &lt;template&gt; &lt;name&gt; [path]
+### print|p &lt;printer&gt; &lt;template&gt; &lt;name&gt;
 
-If path is not defined, file will be printed to `./output/${slug(name)}`
+Print name. You can select printer and template.
 
 **Arguments:**
 
+* **--printer|p** Printer ID
+* **--output|o** File path
 * **template** Template name
 * **name** Name to print
-* **path** Output path
 
 **Example:**
 
 ```bash
-./index.js print-to-file "credit-card" "The name" "./my-file.pdf"
-```
-
-### print-file &lt;file&gt;
-
-Prints an existing file.
-
-**Arguments:**
-
-* **file** Path to printable file
-
-**Example:**
-
-```bash
-./index.js print-file "./my-file.pdf"
+./index.js print 2 "credit-card" "The name"
 ```

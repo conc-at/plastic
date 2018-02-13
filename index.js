@@ -31,7 +31,7 @@ function stringify(data) {
   return JSON.stringify(data, null, '  ')
 }
 
-function output(data, format = 'json') {
+function output(data, format = 'log') {
   switch (format) {
     case 'log':
       return console.log(data)
@@ -75,12 +75,13 @@ program
 
     const list = getPrinters()
 
-    if (program.format === 'log') {
-      list.forEach((p, idx) => table.push([idx, p.name]))
-      return output(list, 'log')
+    switch(program.format) {
+      case 'json':
+        return output(list, program.format)
+        default:
+          list.forEach((p, idx) => table.push([idx, p.name]))
+          output(table.toString(), 'log')
     }
-
-    output(list, program.format)
   })
 
 program
@@ -101,19 +102,31 @@ program
 
       // print
       if (opts.printer) {
-        return await print(stream, opts.printer)
+        return print(stream, opts.printer)
+          .catch((err) => {
+            output(
+              {
+                error: err.message
+              },
+              program.format
+            )
+          })
       }
 
       // write file
       if (opts.output) {
         const o = fs.createWriteStream(opts.output)
         stream.pipe(o)
-        return
+      } else {
+        stream.pipe(process.stdout)
       }
-
-      stream.pipe(process.stdout)
     } catch (err) {
-      output(err, program.format)
+      output(
+        {
+          error: err.message
+        },
+        program.format
+      )
     }
   })
 

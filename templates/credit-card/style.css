@@ -15,6 +15,7 @@ main {
   height: 100%;
   -webkit-flex-direction: column;
   -webkit-justify-content: center;
+  padding-top: 9.5mm;
 }
 
 h1, h2 {
@@ -22,15 +23,15 @@ h1, h2 {
   color: #000000;
   text-align: center;
   margin: 0;
-  padding: 0;
+  padding: 0 0 0 1.75mm;
 }
 
 h1 {
-  font-size: 4mm;
+  font-size: 5mm;
   font-weight: 600;
 }
 
 h2 {
-  font-size: 2mm;
-  font-weight: 300;
+  font-size: 3.5mm;
+  font-weight: 600;
 }

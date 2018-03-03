@@ -2,7 +2,9 @@
 
 const Table = require('cli-table')
 const program = require('commander')
+const CSV = require('comma-separated-values')
 const fs = require('fs')
+const isArray = require('lodash/isArray')
 const path = require('path')
 
 const {
@@ -90,17 +92,55 @@ program
   .alias('p')
   .option('-p, --printer <id>', 'Select printer, write to stdout by default')
   .option('-o, --output <path>', 'Write to file')
+  .option('-i, --input [type]', 'Set input type of data [json]', 'json')
   .action(async (templateName, data, opts) => {
     try {
       const {
         template,
         options
       } = await getTemplate(defaults.templatePath, templateName)
-      const json = JSON.parse(data)
+      
+      let parsedData
+      switch(opts.input) {
+        case 'json':
+          parsedData = JSON.parse(data)
+          break
+        case 'csv':
+          const file = fs.readFileSync(data, 'utf8');
+          parsedData = CSV
+            .parse(file)
+            .map((row) => ({firstname: row[0], lastname: row[1]}))
+          break
+        default:
+          throw new Error(`Invalid input format: "${opts.input}"`)
+      }
+      
       const base = `file://${defaults.templatePath}/${templateName}/`
-      const stream = await document(template, json, {base, ...options})
+      const stream = await document(template, parsedData, {base, ...options})
 
-      // print
+      if (isArray(parsedData) && !opts.printer) {
+        throw new Error('Multiple documents can only be sent to the print queue. File output is not supported.')
+      }
+
+      // print multiple documents
+      if (isArray(parsedData)) {
+        parsedData.forEach(async (d) => {
+          const stream = await document(template, d, {base, ...options})
+          print(stream, opts.printer)
+            .catch((err) => {
+              output(
+                {
+                  error: err.message
+                },
+                program.format
+              )
+            })
+        })
+
+        return
+      }
+
+      // print single document
       if (opts.printer) {
         return print(stream, opts.printer)
           .catch((err) => {
@@ -113,7 +153,7 @@ program
           })
       }
 
-      // write file
+      // write single file
       if (opts.output) {
         const o = fs.createWriteStream(opts.output)
         stream.pipe(o)
